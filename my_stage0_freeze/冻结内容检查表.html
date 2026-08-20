@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>冻结内容检查表 — Stage 0 v0.2</title>
+<style>
+  @page { size: A4; margin: 12mm 10mm; }
+  :root{
+    --ink:#1a1a1a; --mute:#6b6b6b; --line:#d4d0c8; --bg:#ffffff;
+    --accent:#8a3324; --soft:#f6f4f0; --warn:#fdf3e7;
+  }
+  *{box-sizing:border-box;}
+  body{
+    font-family:"Microsoft YaHei","PingFang SC","Hiragino Sans GB",-apple-system,sans-serif;
+    color:var(--ink); background:#e9e6e0; margin:0; padding:16px;
+    font-size:10.2px; line-height:1.45;
+  }
+  .sheet{
+    background:var(--bg); max-width:210mm; margin:0 auto 14px; padding:12mm 10mm;
+    box-shadow:0 1px 6px rgba(0,0,0,.18);
+  }
+  header{border-bottom:2px solid var(--ink); padding-bottom:6px; margin-bottom:9px;}
+  h1{font-size:16px; margin:0 0 3px; letter-spacing:.5px;}
+  .sub{color:var(--mute); font-size:9.3px;}
+  .rule{
+    background:var(--warn); border-left:3px solid var(--accent);
+    padding:5px 8px; margin:8px 0 10px; font-size:9.6px;
+  }
+  h2{
+    font-size:11.4px; margin:11px 0 5px; padding-bottom:2px;
+    border-bottom:1px solid var(--line);
+    display:flex; align-items:baseline; gap:7px;
+  }
+  h2 .n{
+    background:var(--ink); color:#fff; width:15px; height:15px; border-radius:2px;
+    display:inline-flex; align-items:center; justify-content:center;
+    font-size:9.5px; flex:none;
+  }
+  h2 .src{margin-left:auto; font-weight:400; color:var(--mute); font-size:8.6px;}
+  table{width:100%; border-collapse:collapse; margin:0 0 2px;}
+  th,td{border:1px solid var(--line); padding:3px 5px; vertical-align:top; text-align:left;}
+  th{background:var(--soft); font-weight:600; font-size:9.3px;}
+  td{font-size:9.5px;}
+  .k{width:112px; font-weight:600; background:#fbfaf8;}
+  .chk{width:16px; text-align:center; color:var(--mute);}
+  code{font-family:Consolas,"Courier New",monospace; font-size:9px; background:var(--soft); padding:0 2px;}
+  b.red{color:var(--accent);}
+  .gate th:nth-child(1),.gate td:nth-child(1){width:16px; text-align:center;}
+  .gate th:nth-child(2),.gate td:nth-child(2){width:22px; text-align:center; font-weight:700;}
+  .gate th:nth-child(3),.gate td:nth-child(3){width:52px;}
+  .gate th:nth-child(5),.gate td:nth-child(5){width:96px;}
+  .gate th:nth-child(6),.gate td:nth-child(6){width:74px;}
+  tr.g3 td{background:#fdf3e7;}
+  .chain{
+    font-family:Consolas,monospace; font-size:9px; background:var(--soft);
+    border:1px solid var(--line); padding:6px 8px; white-space:pre-wrap; line-height:1.6;
+  }
+  .two{display:grid; grid-template-columns:1fr 1fr; gap:9px;}
+  .note{color:var(--mute); font-size:8.8px; margin-top:3px;}
+  footer{
+    margin-top:12px; padding-top:6px; border-top:1px solid var(--line);
+    color:var(--mute); font-size:8.7px; display:flex; justify-content:space-between;
+  }
+  .sig{margin-top:8px; font-size:9px; color:var(--mute);}
+  .sig span{display:inline-block; border-bottom:1px solid var(--line); width:110px; margin:0 14px 0 4px;}
+  @media print{
+    body{background:#fff; padding:0; font-size:9.4px;}
+    .sheet{box-shadow:none; margin:0; padding:0; max-width:none;}
+    .pb{page-break-before:always;}
+  }
+</style>
+</head>
+<body>
+
+<div class="sheet">
+<header>
+  <h1>冻结内容检查表 · Stage 0 规范 v0.2</h1>
+  <div class="sub">UAV 部署 + 学习增强分支定界 ｜ 用途：日常自查、防口径漂移、Experimental Protocol 初稿骨架 ｜ 生成日期 2026-08-17</div>
+</header>
+
+<div class="rule">
+<b>这张表是索引，不是权威。</b>任何冲突以冻结文档为准：阈值的唯一规范定义在 <code>pilot_protocol_v0.2.md §7</code>，数值在 <code>experiment_space.yaml</code>，理由在 <code>decisions.md</code>。
+表中任何一项若要改动，必须建立新版本号并在 <code>decisions.md</code> 留记录 —— <b class="red">不许因为结果不好看而静默修改</b>。
+</div>
+
+<h2><span class="n">1</span>模型<span class="src">scope.md §2–§5 · experiment_space.yaml</span></h2>
+<table>
+<tr><td class="chk">☐</td><td class="k">问题</td><td>MILP：UAV 部署位置（离散候选网格）＋ 用户关联（每用户至多接一架）＋ 下行接入带宽分配与固定回传容量下的流量承载</td></tr>
+<tr><td class="chk">☐</td><td class="k">目标</td><td>最大化 <code>α_H·H_C − α_Q·Q_C + α_R·R_all − α_D·D_frac</code>，权重 <code>0.65 / 0.20 / 0.14 / 0.01</code>（正、和为 1、严格递减）。<b class="red">训练 / ID test / OOD 共用同一组权重，禁止在测试集上重新调权。</b></td></tr>
+<tr><td class="chk">☐</td><td class="k">用户</td><td>关键用户占 <b>20%</b>（四舍五入后精确）＋普通用户；关键用户最低速率 2 Mbit/s</td></tr>
+<tr><td class="chk">☐</td><td class="k">线性性</td><td>全部无线与能量系数<b>优化前预计算</b>；模型内无两个决策变量相乘</td></tr>
+<tr><td class="chk">☐</td><td class="k">允许的强化</td><td>仅 v0.2 已批准的<b>等价</b>强化与数值缩放：逐边紧上界 <code>M_ul</code>、冗余有效不等式、MHz/Mbit·s⁻¹/kJ 内部缩放（须可无损还原）。加入前后整数可行域与最优值必须一致</td></tr>
+<tr><td class="chk">☐</td><td class="k">安全删边</td><td>仅在 <code>M_ul &lt; b_min − 1 Hz</code> 时删；相等或差 ≤1 Hz 的边<b>保留</b></td></tr>
+<tr><td class="chk">☐</td><td class="k">平凡解</td><td><code>y=x=b=z=0, δ_u=q_u</code> 必须可行，计时起点向<b>所有方法</b>提交并验证求解器确实接受</td></tr>
+<tr><td class="chk">☐</td><td class="k">能量约束</td><td>主 ID/OOD 下<b>静态冗余</b>，只能称"安全可行性约束"，<b class="red">不得说部署由能量驱动</b>；须用实测 <code>d_l^fly</code> 判定，不得引用文档估算值</td></tr>
+<tr><td class="chk">☐</td><td class="k">AI 介入点</td><td>GNN <b>只在 SCIP 允许的候选里挑一个变量</b>。不预测解、不决定分支方向、不删变量、不永久固定、不做无证明剪枝。任何失败 / 超时 / 映射不一致一律回退 SCIP 默认分支 ⇒ 可行域一字不变，最优性证明成立</td></tr>
+</table>
+
+<h2><span class="n">2</span>数据划分<span class="src">scope.md §9 · yaml: evaluation_protocol.dataset_split</span></h2>
+<table>
+<tr><td class="chk">☐</td><td class="k">划分单位</td><td><b>基础灾情场景</b>（base scenario）。<b class="red">禁止节点级随机划分</b>；必须在任何标准化、标签、缓存生成<b>之前</b>先划分</td></tr>
+<tr><td class="chk">☐</td><td class="k">ID 划分</td><td>800 个基础场景 → <b>70 / 15 / 15</b> = train 560 / validation 120 / test 120，固定种子</td></tr>
+<tr><td class="chk">☐</td><td class="k">规模构成</td><td>small/medium/large：train [168, 224, 168] · validation [36, 48, 36] · test [36, 48, 36]<br>规模定义：small = 30 用户 / 4×4 网格 / ≤3 UAV ｜ medium = 45 / 5×5 / ≤4 ｜ large = 60 / 6×6 / ≤5（区域 2000 m 见方）</td></tr>
+<tr><td class="chk">☐</td><td class="k">Pilot 场景</td><td><b>60 个</b>（small/medium/large 各 20），与 train/validation/test/OOD <b>完全隔离</b>；<b class="red">禁止按实测求解时间或 GNN 收益筛选</b>；Pilot 标签全部丢弃并加入哈希黑名单</td></tr>
+<tr><td class="chk">☐</td><td class="k">OOD 三族</td><td>各 <b>60 实例</b>，<b>一次只改一个主因素</b>：<br><code>OOD-size</code> 用户/候选点数超训练范围（2500 m、80 用户、7×7、≤6 UAV）<br><code>OOD-structure</code> 未见聚集强度或几何（30 + 30）<br><code>OOD-backhaul</code> 未见网关锚点族或更紧回传瓶颈</td></tr>
+<tr><td class="chk">☐</td><td class="k">泄漏控制</td><td>归一化统计<b>只在 training 场景上拟合</b>并冻结哈希；跨划分重复场景指纹 fail-closed；缓存按 <code>protocol_id/split/scenario_hash/model_hash/solver_hash</code> 隔离，跨命名空间复用禁止</td></tr>
+<tr><td class="chk">☐</td><td class="k">种子分域</td><td>场景生成 / 划分 / 标签抽样 / 训练 / 求解器 / bootstrap <b>六个随机域独立配置、独立记录</b>，不得从实例编号隐式复用同一随机流</td></tr>
+<tr><td class="chk">☐</td><td class="k">测试集封锁</td><td>test/OOD 在模型、checkpoint、归一化、调用预算、统计脚本、方法顺序清单<b>全部哈希冻结前不可运行</b>；意外访问 = protocol violation，重建未访问的测试版本</td></tr>
+</table>
+
+<h2><span class="n">3</span>四种比较方法<span class="src">scope.md §8.2</span></h2>
+<table>
+<tr><th class="chk">☐</th><th class="k">方法</th><th>角色与约束</th></tr>
+<tr><td class="chk">☐</td><td class="k">SCIP 默认分支</td><td><b>主基线</b>（未修改）。须先记录该 SCIP 版本的<b>实际</b>默认分支配置，避免把同一策略换名当成两个基线</td></tr>
+<tr><td class="chk">☐</td><td class="k">纯 pseudo-cost</td><td>第二基线</td></tr>
+<tr><td class="chk">☐</td><td class="k">全合法候选 GNN</td><td><b>主方法</b></td></tr>
+<tr><td class="chk">☐</td><td class="k">部署变量 GNN</td><td>消融：<b>复用同一 checkpoint，只改候选掩码</b> ⇒ 只能解释为"同一模型的部署候选掩码消融"，<b class="red">不能说成独立训练的 deployment-only GNN</b></td></tr>
+<tr><td class="chk">☐</td><td class="k">full strong</td><td>非第五种方法：只在可承受的小中型子集作<b>慢专家参考</b></td></tr>
+<tr><td class="chk">☐</td><td class="k">公平性</td><td>相同构建、数学模型、presolve、cuts、primal heuristics、单线程、随机种子、时限、gap 容差、实例顺序、硬件；<b>只替换分支策略</b>。<b class="red">禁止关闭或削弱 presolve/cuts/heuristics，禁止用松 Big-M 制造搜索树</b></td></tr>
+</table>
+
+<footer><span>冻结内容检查表 · Stage 0 v0.2</span><span>第 1 页 / 共 2 页</span></footer>
+</div>
+
+<div class="sheet pb">
+
+<h2><span class="n">4</span>时间限制与计时<span class="src">scope.md §8.3 · pilot_protocol §9.2</span></h2>
+<table>
+<tr><td class="chk">☐</td><td class="k">正式时限</td><td><b>300 s</b>，<code>gap 容差 = 0</code>，<b>单线程</b>，SCIP 10.0.2 / PySCIPOpt 6.2，参数文件 <code>scip_10_0_2_stage0_v0_2.set</code>（内容哈希须在 Pilot-A 前保存核对）</td></tr>
+<tr><td class="chk">☐</td><td class="k">超时口径</td><td><b class="red">300 s 超时 ≠ "精确 300 s 求解"</b>。超时实例保留其 incumbent / dual bound / normalized gap / nPDI；只在<b>双方都证明最优</b>的配对上报精确加速比</td></tr>
+<tr><td class="chk">☐</td><td class="k">Pilot 时限</td><td>A1 全部 pilot 场景跑到 <b>60 s</b> 存检查点 → A2 在<b>相同配置</b>下<b>续跑</b>至 300 s；60 s 与 300 s 的终止状态、bound、节点、gap <b>成对报告</b>。续跑等价性必须先通过 A0 单元测试</td></tr>
+<tr><td class="chk">☐</td><td class="k">墙钟定义</td><td>外部单调时钟包住整个 <code>optimize()</code>，必须含特征提取、CPU/GPU 传输、GNN 推理、后处理、回退、低开销日志；同时保存 SCIP 内部 solving time。模型加载与预热允许一次且<b>单独报告</b></td></tr>
+<tr><td class="chk">☐</td><td class="k">运行顺序</td><td>预生成并保存到清单的<b>平衡 Latin-square 顺序</b>；<b class="red">禁止总是先跑 default 或总是最后跑 GNN</b>。正式计时任务不并发，每次求解固定单线程</td></tr>
+<tr><td class="chk">☐</td><td class="k">重复次数</td><td>预跑中 default 外部墙钟 ≤10 s 的场景：四方法各独立跑 <b>3 次取中位数</b>；其余各 1 次。三次不能只重复表现好的或差的方法</td></tr>
+<tr><td class="chk">☐</td><td class="k">调用预算</td><td>GNN 深度 ≤8、每实例最多 64 次调用、单次软延迟 0.5 s、累计开销预算 10 s；<b>测试前锁定</b></td></tr>
+</table>
+
+<h2><span class="n">5</span>主要指标与统计<span class="src">scope.md §8.4 · notation.md · yaml: statistical_protocol</span></h2>
+<table>
+<tr><td class="chk">☐</td><td class="k">主指标</td><td><b>nPDI</b>：固定跨度归一化 gap 在 300 s 上的时间平均。逐分量安全解析范围 <code>[−0.21, 0.79]</code>，跨度恰为 <code>Δ_F = 1.0</code></td></tr>
+<tr><td class="chk">☐</td><td class="k">有效 dual</td><td>SCIP 首次给出有限上界前取解析上界 <code>α_H + α_R</code>，之后取 <code>min(α_H+α_R, SCIP dual)</code>。权重敏感性用对应 profile 的值，<b class="red">禁止把 0.79 硬套给其他 profile</b></td></tr>
+<tr><td class="chk">☐</td><td class="k">口径纪律</td><td><b class="red">SCIP 原生相对 gap 只作诊断字段</b>（目标值跨 0，相对 gap 不稳定），不得作 PDI 主定义。nPDI 按 incumbent / 有效 dual 更新事件构造的<b>分段常数轨迹</b>积分，不作结果驱动的截断或平滑。无 incumbent 的运行标记<b>无效</b>而不是静默填零</td></tr>
+<tr><td class="chk">☐</td><td class="k">声明顺序</td><td>① nPDI（全部实例，场景级配对）→ ② 确认性：证明最优比例、最终 normalized gap → ③ 效率：共同证明最优实例的配对时间、全部实例的节点与 LP 迭代 → ④ 安全：P90/P95 减速、超时变化、调用与回退分布 → ⑤ 模仿指标（<b>仅诊断，不能代替求解性能</b>）</td></tr>
+<tr><td class="chk">☐</td><td class="k">推断统计</td><td>配对单位与 bootstrap 单位<b>均为基础场景，不是分支节点</b>；paired nonparametric bootstrap，<b>10,000 次</b>，95% percentile 区间，统计种子 <code>20260817</code>；ID 按 small/medium/large <b>层内重采样再按冻结比例合并</b>（<code>scipy.stats.bootstrap</code> 不支持，须自写）；OOD 各家族分别报告</td></tr>
+<tr><td class="chk">☐</td><td class="k">尾部</td><td>P90/P95 在完整 120 个 ID test 与每个完整 60 实例 OOD 家族上报告；<b>30 实例子组只报 P90、最大值和逐实例散点</b></td></tr>
+<tr><td class="chk">☐</td><td class="k">纳入规则</td><td><b class="red">根节点可解、GNN 从未调用、零 eligible 节点、GNN 净减速的实例全部进入主结果。</b><code>GNN-eligible</code> 子集只作机制诊断，必须与全体结果并列标明</td></tr>
+<tr><td class="chk">☐</td><td class="k">tie 容差</td><td>win/tie/loss 时间 tie 容差固定为相对默认时间的 <b>1%</b>；短任务先取三次中位数再判定，<b>正式结果出来后不得改值</b></td></tr>
+</table>
+
+<h2><span class="n">6</span>Pilot-A 七道硬门<span class="src">唯一规范定义：pilot_protocol_v0.2.md §7</span></h2>
+<table class="gate">
+<tr><th>☐</th><th>#</th><th>类别</th><th>门（阈值含边界）</th><th>判定范围</th><th>失败后果</th></tr>
+<tr><td>☐</td><td>1</td><td>难度</td><td><code>root solved 或总时间 ≤2 s</code> 的实例比例 <b>≤ 50%</b></td><td>medium、large 分别判，两档都须过；分母 = 该档全部 20 个 pilot 实例</td><td>REVISE</td></tr>
+<tr><td>☐</td><td>2</td><td>机会</td><td>≥ <b>50%</b> 实例在深度 0–8 内有 <b>≥10 个</b> GNN-eligible 节点</td><td>medium、large 分别判，两档都须过</td><td>REVISE</td></tr>
+<tr class="g3"><td>☐</td><td>3</td><td>headroom</td><td>逐实例配对降幅的<b>中位数</b> <code>median_j(1 − fullstrong_j/default_j)</code>，节点数或 LP 迭代数<b>至少一项 ≥ 20%</b><div class="note">注意：不是"中位节点数之比"，两者不是同一统计量</div></td><td>medium、large 各在"双方均于 300 s 内证明最优"的可比配对上判；<b>每档至少 5 个有效配对</b>，不足即失败</td><td><b class="red">可能直接<br>STOP</b></td></tr>
+<tr><td>☐</td><td>4</td><td>经济性</td><td>shadow inference 每实例"累计 AI 开销 / default 端到端墙钟"比值<b>中位数 ≤ 10%</b></td><td>medium、large 分别判，两档都须过；shadow 模型<b>无需训练</b>，测的是调用成本不是准确率</td><td>REVISE /<br>改 root-only</td></tr>
+<tr><td>☐</td><td>5</td><td>标签</td><td>完整<b>根</b>标签率 <b>≥ 80%</b></td><td>small、medium、large 各自判；<b>每个根节点可分支实例都必须尝试查询</b>，不得按耗时或预期成功率筛选；任一档零分母<b>不能按 0/0 通过</b></td><td>REVISE</td></tr>
+<tr><td>☐</td><td>6</td><td>信息量</td><td>同时满足 ①全部关键用户 <code>z_u=1</code> ②独立 evaluator 重算 <code>Q_C ≤ 1e−8</code> ③共享网关利用率 <code>ΣS_u/C_G ≥ 0.95</code> 的实例比例 <b>≤ 80%</b></td><td>medium、large 分别判</td><td>REVISE</td></tr>
+<tr><td>☐</td><td>7</td><td>正确性</td><td>候选映射<b>零错误</b>；教师 parity 身份/顺序精确一致 + <code>atol=1e-9, rtol=1e-7</code> <b>零不一致</b>；全部故障注入触发预期回退</td><td>全局；每个实际执行的对比回调都进入分母</td><td>REVISE</td></tr>
+</table>
+<div class="note">
+<b>执行次序（推荐）</b>：A0 → A1/A2 → A5-headroom → <b>判门 1、3、6</b> → A3 候选映射 → A4 标签路径 → 判门 2、5、7 → A5-shadow → 判门 4 → A6。
+理由：门 3 是唯一能判 <code>STOP</code> 的门，却最便宜（只需把 <code>vanillafullstrong</code> priority 调高，<code>donotbranch=false</code>，不需候选映射和 C 层接口）—— 在投入上百小时接口开发<b>之前</b>先拿到"方向是否成立"的答案。
+<b>不得用多个门的平均表现抵消任一 P0 正确性门失败。</b>A0 的缩放等价与独立复算是<b>前置条件</b>，不另算第八道门。
+</div>
+
+<h2><span class="n">7</span>解锁链与红线<span class="src">scope.md §10 · pilot_protocol §1、§8</span></h2>
+<div class="two">
+<div>
+<div class="chain">baseline 实现
+   ↓
+Pilot-A 七门 → <b>GO</b>
+   ↓ 【只解锁】
+正式场景 + 标签生成 + 三 seed 训练
+   ↓
+按最低 validation masked CE 选 checkpoint
+（并列取较小 seed，写入 manifest）
+   ↓
+Pilot-B（<b>必须用实际入选 checkpoint</b>）
+   ↓ 【两个 manifest 与哈希全部对齐才解锁】
+ID test + 三类 OOD</div>
+<div class="note"><b class="red">Pilot-A 判 GO 单独不解锁正式 test/OOD。</b>Pilot-B 结果<b>不得</b>用来重调模型、生成器或求解预算，也不得重选 checkpoint；60 s 与 300 s 的方法排序反转必须报告，但不是通过门或调参的理由。</div>
+</div>
+<div>
+<table>
+<tr><th colspan="2">失败后<b>禁止</b>的动作</th></tr>
+<tr><td class="chk">✗</td><td>关闭或削弱 presolve / cuts / heuristics</td></tr>
+<tr><td class="chk">✗</td><td>用更松的 Big-M 制造搜索树</td></tr>
+<tr><td class="chk">✗</td><td>根据 GNN 表现挑实例或挑参数</td></tr>
+<tr><td class="chk">✗</td><td>看过 test/OOD 之后修改生成器</td></tr>
+<tr><td class="chk">✗</td><td>从正式结果删除根节点可解 / GNN 未调用 / GNN 变慢的实例</td></tr>
+<tr><td class="chk">✗</td><td>不留决策记录地反复搜索"刚好让 AI 赢"的分布</td></tr>
+<tr><td class="chk">✗</td><td>把教学式 Python 循环称作 native vanilla full strong<br><span class="note">若非 native，须统一改名为 <code>project-defined Python-side all-candidate strong-branching oracle</code></span></td></tr>
+<tr><td class="chk">✓</td><td><b>负结果也要完整保留日志与结论，建立新版本，不删不利实例</b></td></tr>
+</table>
+</div>
+</div>
+
+<div class="sig">本次自查完成日期 <span>&nbsp;</span> 签名 <span>&nbsp;</span> 发现的偏离已记入 <code>decisions.md</code> 决定编号 <span>&nbsp;</span></div>
+
+<footer><span>源文件：scope.md · units.md · notation.md · decisions.md · experiment_space.yaml · pilot_protocol_v0.2.md（Stage 0 v0.2 冻结）</span><span>第 2 页 / 共 2 页</span></footer>
+</div>
+
+</body>
+</html>
